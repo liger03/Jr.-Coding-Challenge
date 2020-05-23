@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 /**
  *
@@ -30,15 +32,11 @@ public class ConversionCode
     public static ArrayList<String[]> readCode(String uri) throws IOException, FileNotFoundException
     {
         ArrayList<String[]> storedData = new ArrayList<>();
-        BufferedReader reader = new BufferedReader(new FileReader(uri));
-        String line=reader.readLine();
-        if(line!=null)  //if there's at least one line in the CSV file,
-            do
-            {
-                line=line.trim();   //trim off any whitespace before starting
-                storedData.add(line.split(","));    //split it into tokens and store it in the output variable
-                line=reader.readLine();     //and go to the next line
-            }while(line !=null);            //until the next line is empty and we're at the end of the file
+        CSVReader reader = new CSVReader(new FileReader(uri));
+        Iterator iter = reader.iterator();
+        while(iter.hasNext())
+        storedData.add((String[])iter.next());
+        
         return storedData;
     }
     public static void splitEntries(ArrayList<String[]> entries, ArrayList<String[]> good,  ArrayList<String[]> bad)
@@ -91,24 +89,24 @@ public class ConversionCode
                         + "J text \n"
                         +");"); //create the table with entries A through J.
                 stmt.close();
-                for(String[] entry: entries)
-                {
-                    addEntryToDatabase(entry, conn);
-                }
+                addEntriesToDatabase(entries, conn);
             }
         }
         catch (SQLException e){
             System.out.println(e.getMessage());
         }
     }
-    public static void addEntryToDatabase(String[] entry, Connection conn) throws SQLException
+    public static void addEntriesToDatabase(ArrayList<String[]> entries, Connection conn) throws SQLException
     {
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO parsed_entries VALUES(?,?,?,?,?,?,?,?,?,?)");
-        for(int i=0; i<10; i++)
+        for(String[] entry : entries)
         {
-            stmt.setString(i+1, entry[i]);
+            for(int i=0; i<10; i++)
+                {
+                    stmt.setString(i+1, entry[i]);
+                }
+            stmt.executeUpdate();
         }
-        stmt.executeUpdate();
         stmt.close();
     }
     public static void logData(int received, int successful, String url)
