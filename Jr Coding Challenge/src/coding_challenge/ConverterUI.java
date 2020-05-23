@@ -98,7 +98,7 @@ public class ConverterUI extends javax.swing.JFrame {
             {
                 entries=ConversionCode.readCode(filetext);
                 ConversionCode.splitEntries(entries, goodEntries, badEntries);
-            ConversionCode.writeEntries(badEntries);
+            ConversionCode.writeEntries(goodEntries);
             }
             catch(IOException e)
             {

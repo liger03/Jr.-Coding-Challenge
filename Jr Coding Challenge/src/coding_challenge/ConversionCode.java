@@ -26,6 +26,7 @@ public class ConversionCode
         if(line!=null)  //if there's at least one line in the CSV file,
             do
             {
+                line=line.trim();   //trim off any whitespace before starting
                 storedData.add(line.split(","));    //split it into tokens and store it in the output variable
                 line=reader.readLine();     //and go to the next line
             }while(line !=null);            //until the next line is empty and we're at the end of the file
@@ -35,8 +36,14 @@ public class ConversionCode
     {
         for (String[] entry: entries)   //for every entry in the list of entries,
         {
-            if(entry.length!=10)    //if it's not the proper length
+            Boolean complete=true;
+            for(String word: entry)    //check each word in each entry
+                if(word.equals(""))     //if any of the words are blank,
+                    complete=false;     //the entry isn't complete.
+            if(!complete)           //if it isn't,
+            {
                 bad.add(entry);     //then add it to the malformed entry list
+            }
             else
                 good.add(entry);    //otherwise, add it to the proper entry list
         }
