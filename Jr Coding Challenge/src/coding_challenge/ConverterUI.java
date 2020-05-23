@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -30,6 +31,9 @@ public class ConverterUI extends javax.swing.JFrame {
         filePathField = new javax.swing.JTextField();
         findButton = new javax.swing.JButton();
         convertButton = new javax.swing.JButton();
+        nameText = new javax.swing.JTextField();
+        destinationLabel = new javax.swing.JLabel();
+        originLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle(".CSV to .db converter");
@@ -48,6 +52,10 @@ public class ConverterUI extends javax.swing.JFrame {
             }
         });
 
+        destinationLabel.setText("Name of new file");
+
+        originLabel.setText("Address of CSV file");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -57,9 +65,16 @@ public class ConverterUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(convertButton)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(filePathField, javax.swing.GroupLayout.DEFAULT_SIZE, 272, Short.MAX_VALUE)
+                        .addGap(8, 8, 8)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(originLabel)
+                            .addComponent(destinationLabel))
                         .addGap(18, 18, 18)
-                        .addComponent(findButton)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(filePathField, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
+                            .addComponent(nameText))))
+                .addGap(18, 18, 18)
+                .addComponent(findButton)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -68,10 +83,15 @@ public class ConverterUI extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filePathField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(findButton))
+                    .addComponent(findButton)
+                    .addComponent(originLabel))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(nameText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(destinationLabel))
                 .addGap(18, 18, 18)
                 .addComponent(convertButton)
-                .addContainerGap(21, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
         pack();
@@ -87,9 +107,9 @@ public class ConverterUI extends javax.swing.JFrame {
 
     private void convertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_convertButtonActionPerformed
         String filetext = filePathField.getText().trim();
-        Vector <String[]> entries;
-        Vector <String[]> goodEntries = new Vector<String[]>();
-        Vector <String[]> badEntries = new Vector<String[]>();
+        ArrayList <String[]> entries;
+        ArrayList <String[]> goodEntries = new ArrayList<String[]>();
+        ArrayList <String[]> badEntries = new ArrayList<String[]>();
         if(!filetext.toLowerCase().endsWith(".csv"))
             JOptionPane.showMessageDialog(null, "Please select a file with the .CSV extension.", "ERROR", HEIGHT);
         else
@@ -98,11 +118,12 @@ public class ConverterUI extends javax.swing.JFrame {
             {
                 entries=ConversionCode.readCode(filetext);
                 ConversionCode.splitEntries(entries, goodEntries, badEntries);
-            ConversionCode.writeEntries(goodEntries);
+                ConversionCode.createDatabase(goodEntries, filetext, nameText.getText());
+                ConversionCode.createDatabase(badEntries, filetext, nameText.getText()+"-bad");
             }
             catch(IOException e)
             {
-                JOptionPane.showMessageDialog(null, "File not found.", "ERROR", HEIGHT);
+                JOptionPane.showMessageDialog(null, "An IO Exception occured. Either the file was incorrectly formatted, or the selected file does not exist or cannot be opened.", "ERROR", HEIGHT);
             }
         }
     }//GEN-LAST:event_convertButtonActionPerformed
@@ -144,7 +165,10 @@ public class ConverterUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton convertButton;
+    private javax.swing.JLabel destinationLabel;
     private javax.swing.JTextField filePathField;
     private javax.swing.JButton findButton;
+    private javax.swing.JTextField nameText;
+    private javax.swing.JLabel originLabel;
     // End of variables declaration//GEN-END:variables
 }
