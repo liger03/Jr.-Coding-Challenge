@@ -118,8 +118,10 @@ public class ConverterUI extends javax.swing.JFrame {
             {
                 entries=ConversionCode.readCode(filetext);
                 ConversionCode.splitEntries(entries, goodEntries, badEntries);
-                ConversionCode.createDatabase(goodEntries, filetext, nameText.getText());
-                ConversionCode.createDatabase(badEntries, filetext, nameText.getText()+"-bad");
+                ConversionCode dbManager = new ConversionCode();
+                dbManager.createDatabase(goodEntries, filetext, nameText.getText());
+                dbManager.createDatabase(badEntries, filetext, nameText.getText()+"-bad");
+                JOptionPane.showMessageDialog(null, "Conversion completed.", "Success!", HEIGHT);
             }
             catch(IOException e)
             {

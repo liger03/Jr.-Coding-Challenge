@@ -22,6 +22,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -29,6 +34,20 @@ import com.opencsv.exceptions.CsvValidationException;
  */
 public class ConversionCode 
 {
+    public class DatabaseThread implements Runnable  //a thread for adding database entries in parallel
+    {
+        List<String[]> data;
+        String url;
+        public DatabaseThread(List<String[]> input, String u)
+        {
+            data=input;
+            url=u;
+        }
+        public void run()
+        {
+            addEntriesToDatabase(data, url);
+        }
+    }
     public static ArrayList<String[]> readCode(String uri) throws IOException, FileNotFoundException
     {
         ArrayList<String[]> storedData = new ArrayList<>();
@@ -45,9 +64,9 @@ public class ConversionCode
         {
             Boolean complete=true;
             for(String word: entry)    //check each word in each entry
-                if(word.equals(""))     //if any of the words are blank,
+                if(complete && (word.equals("")))     //if any of the words are blank or an entry isn't long enough,
                     complete=false;     //the entry isn't complete.
-            if(!complete)           //if it isn't,
+            if(!complete || entry.length!=10)           //if it isn't complete,
             {
                 bad.add(entry);     //then add it to the malformed entry list
             }
@@ -66,7 +85,7 @@ public class ConversionCode
             System.out.println();       //end each entry with a newline.
         }
     }
-    public static void createDatabase(ArrayList<String[]> entries, String url, String filename) //creates and populates the database
+    public void createDatabase(ArrayList<String[]> entries, String url, String filename) //creates and populates the database
     {
         String newURL = new File(url).getParent()+"/"+filename+".db";
         newURL="jdbc:sqlite:"+newURL;
@@ -89,25 +108,46 @@ public class ConversionCode
                         + "J text \n"
                         +");"); //create the table with entries A through J.
                 stmt.close();
-                addEntriesToDatabase(entries, conn);
             }
         }
         catch (SQLException e){
             System.out.println(e.getMessage());
         }
-    }
-    public static void addEntriesToDatabase(ArrayList<String[]> entries, Connection conn) throws SQLException
-    {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO parsed_entries VALUES(?,?,?,?,?,?,?,?,?,?)");
-        for(String[] entry : entries)
-        {
-            for(int i=0; i<10; i++)
-                {
-                    stmt.setString(i+1, entry[i]);
-                }
-            stmt.executeUpdate();
+        ExecutorService pool = Executors.newCachedThreadPool();
+        pool.submit(new DatabaseThread(entries.subList(0,entries.size()), newURL));
+        try {
+            if(!pool.awaitTermination(1, TimeUnit.HOURS))
+                System.out.println("Database entry is taking longer than an hour! Are you sure SQLite is a good fit for this database?");
+        } catch (InterruptedException ex) {
+            System.out.println("The main thread was interrupted! Exception message: "+ex.getMessage());
         }
-        stmt.close();
+    }
+    public static void addEntriesToDatabase(List<String[]> entries, String url)
+    {
+        try(Connection conn = DriverManager.getConnection(url))    //try, provided the connection is closed after trying
+        {
+            int batchSize=0;
+            PreparedStatement stmt = conn.prepareStatement("INSERT INTO parsed_entries VALUES(?,?,?,?,?,?,?,?,?,?)");
+            for(String[] entry : entries)
+            {
+                    for(int i=0; i<entry.length; i++)
+                        {
+                            stmt.setString(i+1, entry[i]);
+                        }
+                stmt.addBatch();
+                batchSize++;
+                if(batchSize==100)
+                {
+                    stmt.executeBatch();
+                    stmt.clearBatch();
+                    batchSize=0;
+                }
+            }
+            stmt.executeBatch();
+            stmt.close();
+        } catch (SQLException ex) {
+            System.out.println("A SQLException occured. Error message: "+ex.getMessage());
+        }
     }
     public static void logData(int received, int successful, String url)
     {
