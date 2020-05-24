@@ -5,7 +5,6 @@
  */
 package coding_challenge;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,16 +16,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -34,18 +28,43 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConversionCode 
 {
-    public class DatabaseThread implements Runnable  //a thread for adding database entries in parallel
+    public  JProgressBar bar;
+
+    public class DatabaseThread extends SwingWorker<Integer, Integer>  //a thread for adding database entries in parallel
     {
         List<String[]> data;
         String url;
-        public DatabaseThread(List<String[]> input, String u)
+        JProgressBar bar;
+        public DatabaseThread(List<String[]> input, String u, JProgressBar barIn)
         {
             data=input;
             url=u;
+            bar=barIn;
         }
-        public void run()
+        public Integer doInBackground()
         {
-            addEntriesToDatabase(data, url);
+            try(Connection conn = DriverManager.getConnection(url))    //try, provided the connection is closed after trying
+            {
+                publish(0);
+                for(int i=0; i<100; i++)
+                {
+                    if(i<99)
+                        addEntriesToDatabase(conn, data.subList(data.size()*i/100, data.size()*(i+1)/100), url);
+                    else
+                        addEntriesToDatabase(conn, data.subList(data.size()*99/100, data.size()), url);
+                    publish(i);
+                }
+            } catch (SQLException ex) {
+            System.out.println("A SQLException occured. Error message: "+ex.getMessage());
+        }
+            return 100;
+        }
+        protected void process(List<Integer> progress)
+        {
+            int prog=progress.get(progress.size()-1);
+            bar.setValue(prog);
+            bar.setString(""+prog+"%");
+            bar.repaint();
         }
     }
     public static ArrayList<String[]> readCode(String uri) throws IOException, FileNotFoundException
@@ -85,7 +104,7 @@ public class ConversionCode
             System.out.println();       //end each entry with a newline.
         }
     }
-    public void createDatabase(ArrayList<String[]> entries, String url, String filename) //creates and populates the database
+    public void createDatabase(ArrayList<String[]> entries, String url, String filename, JProgressBar bar) //creates and populates the database
     {
         String newURL = new File(url).getParent()+"/"+filename+".db";
         newURL="jdbc:sqlite:"+newURL;
@@ -113,19 +132,11 @@ public class ConversionCode
         catch (SQLException e){
             System.out.println(e.getMessage());
         }
-        ExecutorService pool = Executors.newCachedThreadPool();
-        pool.submit(new DatabaseThread(entries.subList(0,entries.size()), newURL));
-        try {
-            if(!pool.awaitTermination(1, TimeUnit.HOURS))
-                System.out.println("Database entry is taking longer than an hour! Are you sure SQLite is a good fit for this database?");
-        } catch (InterruptedException ex) {
-            System.out.println("The main thread was interrupted! Exception message: "+ex.getMessage());
-        }
+        DatabaseThread task = new DatabaseThread(entries, newURL, bar);
+        task.execute();
     }
-    public static void addEntriesToDatabase(List<String[]> entries, String url)
+    public void addEntriesToDatabase(Connection conn, List<String[]> entries, String url) throws SQLException
     {
-        try(Connection conn = DriverManager.getConnection(url))    //try, provided the connection is closed after trying
-        {
             int batchSize=0;
             PreparedStatement stmt = conn.prepareStatement("INSERT INTO parsed_entries VALUES(?,?,?,?,?,?,?,?,?,?)");
             for(String[] entry : entries)
@@ -145,9 +156,7 @@ public class ConversionCode
             }
             stmt.executeBatch();
             stmt.close();
-        } catch (SQLException ex) {
-            System.out.println("A SQLException occured. Error message: "+ex.getMessage());
-        }
+        
     }
     public static void logData(int received, int successful, String url)
     {

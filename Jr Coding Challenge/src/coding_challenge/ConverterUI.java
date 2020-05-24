@@ -5,12 +5,9 @@
  */
 package coding_challenge;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Vector;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -34,6 +31,9 @@ public class ConverterUI extends javax.swing.JFrame {
         nameText = new javax.swing.JTextField();
         destinationLabel = new javax.swing.JLabel();
         originLabel = new javax.swing.JLabel();
+        goodProgressBar = new javax.swing.JProgressBar();
+        badProgressBar = new javax.swing.JProgressBar();
+        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle(".CSV to .db converter");
@@ -56,26 +56,40 @@ public class ConverterUI extends javax.swing.JFrame {
 
         originLabel.setText("Address of CSV file");
 
+        goodProgressBar.setStringPainted(true);
+
+        badProgressBar.setStringPainted(true);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(20, 20, 20)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(convertButton)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(8, 8, 8)
+                        .addGap(28, 28, 28)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(originLabel)
-                            .addComponent(destinationLabel))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(filePathField, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
-                            .addComponent(nameText))))
+                            .addComponent(destinationLabel)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(convertButton)))
                 .addGap(18, 18, 18)
-                .addComponent(findButton)
-                .addContainerGap())
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(filePathField)
+                    .addComponent(nameText)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(badProgressBar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(goodProgressBar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(0, 37, Short.MAX_VALUE)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(findButton))
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(filler1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -90,8 +104,14 @@ public class ConverterUI extends javax.swing.JFrame {
                     .addComponent(nameText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(destinationLabel))
                 .addGap(18, 18, 18)
-                .addComponent(convertButton)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(filler1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(convertButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(goodProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(badProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -116,16 +136,19 @@ public class ConverterUI extends javax.swing.JFrame {
         {
             try
             {
+                ((JButton)evt.getSource()).setEnabled(false);
                 entries=ConversionCode.readCode(filetext);
                 ConversionCode.splitEntries(entries, goodEntries, badEntries);
                 ConversionCode dbManager = new ConversionCode();
-                dbManager.createDatabase(goodEntries, filetext, nameText.getText());
-                dbManager.createDatabase(badEntries, filetext, nameText.getText()+"-bad");
-                JOptionPane.showMessageDialog(null, "Conversion completed.", "Success!", HEIGHT);
+                dbManager.createDatabase(goodEntries, filetext, nameText.getText(), goodProgressBar);
+                dbManager.createDatabase(badEntries, filetext, nameText.getText()+"-bad", badProgressBar);
             }
             catch(IOException e)
             {
                 JOptionPane.showMessageDialog(null, "An IO Exception occured. Either the file was incorrectly formatted, or the selected file does not exist or cannot be opened.", "ERROR", HEIGHT);
+            }
+            finally{
+                ((JButton)evt.getSource()).setEnabled(true);
             }
         }
     }//GEN-LAST:event_convertButtonActionPerformed
@@ -166,10 +189,13 @@ public class ConverterUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JProgressBar badProgressBar;
     private javax.swing.JButton convertButton;
     private javax.swing.JLabel destinationLabel;
     private javax.swing.JTextField filePathField;
+    private javax.swing.Box.Filler filler1;
     private javax.swing.JButton findButton;
+    private javax.swing.JProgressBar goodProgressBar;
     private javax.swing.JTextField nameText;
     private javax.swing.JLabel originLabel;
     // End of variables declaration//GEN-END:variables
