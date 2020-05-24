@@ -17,7 +17,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import com.opencsv.CSVReader;
+import java.io.FileWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -54,16 +57,20 @@ public class ConversionCode
                         addEntriesToDatabase(conn, data.subList(data.size()*99/100, data.size()), url);
                     publish(i);
                 }
+                publish(100);
             } catch (SQLException ex) {
-            System.out.println("A SQLException occured. Error message: "+ex.getMessage());
+            ex.printStackTrace();
         }
-            return 100;
+            return 1;
         }
         protected void process(List<Integer> progress)
         {
             int prog=progress.get(progress.size()-1);
             bar.setValue(prog);
-            bar.setString(""+prog+"%");
+            if(prog<100)
+                bar.setString(""+prog+"%");
+            else
+                bar.setString("Complete!");
             bar.repaint();
         }
     }
@@ -137,8 +144,8 @@ public class ConversionCode
     }
     public void addEntriesToDatabase(Connection conn, List<String[]> entries, String url) throws SQLException
     {
-            int batchSize=0;
             PreparedStatement stmt = conn.prepareStatement("INSERT INTO parsed_entries VALUES(?,?,?,?,?,?,?,?,?,?)");
+            int batchSize=0;
             for(String[] entry : entries)
             {
                     for(int i=0; i<entry.length; i++)
@@ -154,13 +161,23 @@ public class ConversionCode
                     batchSize=0;
                 }
             }
-            stmt.executeBatch();
+            if(batchSize!=0)
+                stmt.executeBatch();
             stmt.close();
         
     }
-    public static void logData(int received, int successful, String url)
+    public  void logData(int received, int successful, String url, String name)
     {
-        
+        try {
+            String newURL = (new File(url).getParent())+"/"+name+".log";
+            FileWriter writer = new FileWriter(newURL, false);
+            writer.write("Number of records received: "+received+"\n"
+            +"Number of records successful: "+successful+"\n"
+            +"Number of records failed: "+(received-successful));
+            writer.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(ConversionCode.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
 }
