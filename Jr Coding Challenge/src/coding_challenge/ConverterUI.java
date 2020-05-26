@@ -32,10 +32,8 @@ public class ConverterUI extends javax.swing.JFrame {
         destinationLabel = new javax.swing.JLabel();
         originLabel = new javax.swing.JLabel();
         goodProgressBar = new javax.swing.JProgressBar();
-        badProgressBar = new javax.swing.JProgressBar();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0));
         jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle(".CSV to .db converter");
@@ -60,11 +58,7 @@ public class ConverterUI extends javax.swing.JFrame {
 
         goodProgressBar.setStringPainted(true);
 
-        badProgressBar.setStringPainted(true);
-
         jLabel1.setText("Good .db progress");
-
-        jLabel2.setText("Bad .db progress");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -85,21 +79,12 @@ public class ConverterUI extends javax.swing.JFrame {
                     .addComponent(filePathField)
                     .addComponent(nameText)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(badProgressBar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(goodProgressBar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(goodProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                        .addComponent(jLabel1)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, 0)
-                        .addComponent(findButton))
+                    .addComponent(findButton)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(60, 60, 60)
                         .addComponent(filler1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
@@ -122,11 +107,7 @@ public class ConverterUI extends javax.swing.JFrame {
                     .addComponent(convertButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel1)
                     .addComponent(goodProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(badProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(40, Short.MAX_VALUE))
         );
 
         pack();
@@ -154,9 +135,8 @@ public class ConverterUI extends javax.swing.JFrame {
                 entries=ConversionCode.readCode(filetext);
                 ConversionCode.splitEntries(entries, goodEntries, badEntries);
                 ConversionCode dbManager1 = new ConversionCode();
-                ConversionCode dbManager2 = new ConversionCode();
                 dbManager1.createDatabase(goodEntries, filetext, nameText.getText(), goodProgressBar);
-                dbManager2.createDatabase(badEntries, filetext, nameText.getText()+"-bad", badProgressBar);
+                ConversionCode.writeCSV(badEntries, filetext, nameText.getText());
                 dbManager1.logData(entries.size(),goodEntries.size(), filetext, nameText.getText());
             }
             catch(IOException e)
@@ -202,7 +182,6 @@ public class ConverterUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JProgressBar badProgressBar;
     private javax.swing.JButton convertButton;
     private javax.swing.JLabel destinationLabel;
     private javax.swing.JTextField filePathField;
@@ -210,7 +189,6 @@ public class ConverterUI extends javax.swing.JFrame {
     private javax.swing.JButton findButton;
     private javax.swing.JProgressBar goodProgressBar;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JTextField nameText;
     private javax.swing.JLabel originLabel;
     // End of variables declaration//GEN-END:variables

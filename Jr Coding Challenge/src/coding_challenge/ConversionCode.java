@@ -17,12 +17,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import java.io.FileWriter;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 /**
@@ -43,6 +43,7 @@ public class ConversionCode
             url=u;      //the url this ConversionCode object will load to
             bar=barIn;  //the progress bar this ConversionCode will update
         }
+        @Override
         public Integer doInBackground()
         {
             try(Connection conn = DriverManager.getConnection(url))    //try, provided the connection is closed after trying
@@ -62,6 +63,7 @@ public class ConversionCode
         }
             return 1;
         }
+        @Override
         protected void process(List<Integer> progress)  //command run in the main thread to update progress bars
         {
             int prog=progress.get(progress.size()-1);   //get the latest value of program's progress
@@ -79,8 +81,7 @@ public class ConversionCode
         CSVReader reader = new CSVReader(new FileReader(url));  //a reader to read CSV files
         Iterator iter = reader.iterator();  //and an iterator on the reader
         while(iter.hasNext())
-        storedData.add((String[])iter.next());  //simply read each entry as string arrays
-        
+            storedData.add((String[])iter.next());  //simply read each entry as string arrays
         return storedData;  //and return the read entries as an arraylist
     }
     public static void splitEntries(ArrayList<String[]> entries, ArrayList<String[]> good,  ArrayList<String[]> bad)
@@ -97,17 +98,6 @@ public class ConversionCode
             }
             else
                 good.add(entry);    //otherwise, add it to the proper entry list
-        }
-    }
-    public static void writeEntries(ArrayList<String[]> entries)
-    {
-        for (String[] entry:entries)    //for every entry in the input list of entries,
-        {
-            for(String word:entry)      //for each word in the entry
-            {
-                System.out.print(word+"\t");    //write it out.
-            }
-            System.out.println();       //end each entry with a newline.
         }
     }
     public void createDatabase(ArrayList<String[]> entries, String url, String filename, JProgressBar bar) //creates and populates the database
@@ -165,7 +155,21 @@ public class ConversionCode
             stmt.close();           //and close the statement.
         
     }
-    public  void logData(int received, int successful, String url, String name)
+    public static void writeCSV(List<String[]> data, String url, String filename)
+    {
+        String newURL = new File(url).getParent()+"/"+filename+".csv";  //change the input url to represent the new CSV file
+        try(CSVWriter writer = new CSVWriter (new FileWriter(newURL)))  //create the new display file
+        {   
+        Iterator iter = data.iterator();
+        while(iter.hasNext())                       //for every item in the data list,
+        {
+            writer.writeNext((String[])iter.next());    //write the data as en entry in the .csv file
+        }
+        } catch (IOException ex) {  //report an IOException if the file fails to write.
+            System.out.println("ERROR: Something went wrong while writing the bad.csv file. Error message: "+ex.getMessage());
+        }
+    }
+    public void logData(int received, int successful, String url, String name)
     {
         try {
             String newURL = (new File(url).getParent())+"/"+name+".log";    //create the log file's URL,
@@ -175,8 +179,7 @@ public class ConversionCode
             +"Number of records failed: "+(received-successful));
             writer.flush();                                                 //flush to make sure it's written,
         } catch (IOException ex) {
-            Logger.getLogger(ConversionCode.class.getName()).log(Level.SEVERE, null, ex);   //and if there's any errors then log it.
+            System.out.println("ERROR: Something went wrong while writing the log file. Error message: "+ex.getMessage());
         }
     }
-    
 }
