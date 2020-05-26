@@ -151,7 +151,6 @@ public class ConverterUI extends javax.swing.JFrame {
         {
             try
             {
-                ((JButton)evt.getSource()).setEnabled(false);
                 entries=ConversionCode.readCode(filetext);
                 ConversionCode.splitEntries(entries, goodEntries, badEntries);
                 ConversionCode dbManager1 = new ConversionCode();
@@ -163,9 +162,6 @@ public class ConverterUI extends javax.swing.JFrame {
             catch(IOException e)
             {
                 JOptionPane.showMessageDialog(null, "An IO Exception occured. Either the file was incorrectly formatted, or the selected file does not exist or cannot be opened.", "ERROR", HEIGHT);
-            }
-            finally{
-                ((JButton)evt.getSource()).setEnabled(true);
             }
         }
     }//GEN-LAST:event_convertButtonActionPerformed
