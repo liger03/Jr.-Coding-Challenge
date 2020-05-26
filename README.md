@@ -18,13 +18,13 @@ When the progress bar hits 100% and if there are no errors, you may close the pr
 
 # NOTES:
 
--This program was written under the assumption that the .csv file is comma-seperated. It is possible for a .csv file to not follow this standard, and such files will not work with this converter.
+- This program was written under the assumption that the .csv file is comma-seperated. It is possible for a .csv file to not follow this standard, and such files will not work with this converter.
 
--The program initially will not show any indication that it is processing. Pressing "convert" while the program is already converting may cause unintended behavior. To see if the program is converting, simply look for the incomplete database files in your system.
+- The program initially will not show any indication that it is processing. Pressing "convert" while the program is already converting may cause unintended behavior. To see if the program is converting, simply look for the incomplete database files in your system.
 
--The code is fully commented and the repository contains all of the necessary libraries to compile.
+- The code is fully commented and the repository contains all of the necessary libraries to compile.
 
--My initial approach was to create a Swing-based program to make converting from .csv to .db as easy and fast as possible. As it turns out, .db entry is very slow and multithreading the entry process is not possible so I had to instead focus on making progress as visible as possible.
+- My initial approach was to create a Swing-based program to make converting from .csv to .db as easy and fast as possible. As it turns out, .db entry is very slow and multithreading the entry process is not possible so I had to instead focus on making progress as visible as possible.
 
 - Readability and simplicity were key to this project: I have no idea what technical proficiency the customer may have, so I must assume the minimum.
 
